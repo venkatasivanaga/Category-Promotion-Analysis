@@ -1,27 +1,9 @@
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs
-*.log
-
-# Env
-.env
-.env.*
-
-# Python
-__pycache__/
-*.py[cod]
-.pytest_cache/
-.ruff_cache/
-.venv/
-venv/
-
-# Node
-node_modules/
+# Python artifacts (repo-wide safety)
+*.egg-info/
+build/
 dist/
-.vite/
 
-# IDE
-.vscode/
-.idea/
+# Local databases / uploads
+*.sqlite
+*.db
+uploads/
