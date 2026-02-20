@@ -1,9 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.routes_runs import router as runs_router
 from app.api.routes_health import router as health_router
 from app.core.config import settings
 from app.core.logging import RequestLoggingMiddleware, configure_logging
+from app.db.session import Base, engine
+from app.db import models  # noqa: F401
 
 def create_app() -> FastAPI:
     configure_logging()
@@ -25,6 +28,11 @@ def create_app() -> FastAPI:
     app.add_middleware(RequestLoggingMiddleware)
 
     app.include_router(health_router)
+    app.include_router(runs_router)
+
+    @app.on_event("startup")
+    def _startup():
+        Base.metadata.create_all(bind=engine)
 
     @app.get("/")
     def root():
