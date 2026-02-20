@@ -25,4 +25,18 @@ Minimum recommended columns (names can be adapted later):
   - `promo_id` (preferred) OR
   - `is_promo` (0/1)
 
+## Data Contract (v0)
+Required:
+- `date`: date or datetime
+- `category`: string
+- `units`: number
+- `revenue`: number
+
+At least one promo indicator:
+- `promo_id` (string) OR `is_promo` (0/1)
+
+Optional but supported later:
+- `sku`
+- `discount_pct`
+
 > We’ll include a sample dataset in `/sample_data` and also add a “Load sample” button in the UI.
