@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.routes_health import router as health_router
+
 def create_app() -> FastAPI:
     app = FastAPI(
         title="Category Promotion Analysis API",
@@ -9,15 +11,17 @@ def create_app() -> FastAPI:
 
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],  # dev only; we’ll tighten for deployment
+        allow_origins=["*"],  # dev only; tighten for deployment
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
 
-    @app.get("/health")
-    def health():
-        return {"status": "ok"}
+    app.include_router(health_router)
+
+    @app.get("/")
+    def root():
+        return {"message": "Category Promotion Analysis API", "docs": "/docs"}
 
     return app
 
