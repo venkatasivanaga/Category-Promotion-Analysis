@@ -1,5 +1,10 @@
+# add these imports if not present
 from sqlalchemy import String, DateTime, func
 from sqlalchemy.orm import Mapped, mapped_column
+
+# inside class Run(Base):
+file_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
+original_filename: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
 from app.db.session import Base
 
