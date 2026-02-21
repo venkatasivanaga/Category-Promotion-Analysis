@@ -1,6 +1,9 @@
 from pydantic import BaseModel
 from datetime import datetime
 
+file_path: str | None = None
+original_filename: str | None = None
+
 class RunOut(BaseModel):
     id: str
     status: str
