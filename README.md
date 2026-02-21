@@ -6,6 +6,23 @@ A full-stack promo analytics app: **Upload a CSV → validate schema → compute
 
 ---
 
+## Table of Contents
+- [What it does](#-what-it-does)
+- [Tech Stack](#-tech-stack)
+- [Current Features](#-current-features-backend)
+- [Repository Structure](#-repository-structure)
+- [CSV Data Contract](#-csv-data-contract-v0)
+- [Quickstart (Backend)](#-quickstart-backend)
+- [Run Tests](#-run-tests)
+- [API Reference](#-api-reference)
+- [Metrics](#-metrics-current)
+- [Roadmap](#-roadmap)
+- [Notes on Persistence](#-notes-on-persistence)
+- [License](#-license)
+- [Author](#-author)
+
+---
+
 ## ✨ What it does
 
 - Creates **analysis runs** (tracked in SQLite)
@@ -73,6 +90,8 @@ Category-Promotion-Analysis/
   .gitignore
 ```
 
+---
+
 ## 📊 CSV Data Contract (v0)
 
 ### Required columns
@@ -89,7 +108,8 @@ Category-Promotion-Analysis/
 - `sku`
 - `discount_pct`
 
-A sample file is included at: `sample_data/sample_promos.csv`.
+Sample file:
+- `sample_data/sample_promos.csv`
 
 ---
 
@@ -111,110 +131,122 @@ cd backend
 pip install -e ".[dev]"
 ```
 
-If you prefer not to conda activate, you can run:
-conda run -n promo-analytics python -m pip install -e ".[dev]"
+If you prefer not to `conda activate`, you can run:
 
-3) Run the API
+```bash
+cd backend
+conda run -n promo-analytics python -m pip install -e ".[dev]"
+```
+
+### 3) Run the API
+
+```bash
+cd backend
 uvicorn app.main:app --reload --port 8000
+```
 
 Open:
+- Health: http://127.0.0.1:8000/health
+- API docs (Swagger): http://127.0.0.1:8000/docs
 
-Health: http://127.0.0.1:8000/health
+---
 
-API docs: http://127.0.0.1:8000/docs
-
-✅ Run Tests
+## ✅ Run Tests
 
 From the repo root:
 
+```bash
 cd backend
 pytest
+```
 
 Or with conda run:
 
+```bash
 cd backend
 conda run -n promo-analytics python -m pytest
-🔌 API Reference
+```
+
+---
+
+## 🔌 API Reference
 
 Base URL (local): http://127.0.0.1:8000
 
-Health
+### Health
+- `GET /health` → `{ "status": "ok" }`
 
-GET /health → { "status": "ok" }
+### Runs
+- `POST /runs` → create a run
+- `GET /runs` → list recent runs
+- `GET /runs/{run_id}` → get run metadata
 
-Runs
+### Upload CSV
+- `POST /runs/{run_id}/upload` (multipart/form-data)
 
-POST /runs → create a run
-
-GET /runs → list recent runs
-
-GET /runs/{run_id} → get run metadata
-
-Upload CSV
-
-POST /runs/{run_id}/upload (multipart)
-
-Example (curl):
-
+Create a run:
+```bash
 curl -X POST "http://127.0.0.1:8000/runs"
+```
 
-Upload:
-
+Upload CSV:
+```bash
 curl -X POST "http://127.0.0.1:8000/runs/<RUN_ID>/upload" \
   -F "file=@sample_data/sample_promos.csv"
-Analyze + Results
+```
 
-POST /runs/{run_id}/analyze → compute and persist results
+### Analyze + Results
+- `POST /runs/{run_id}/analyze` → compute and persist results
+- `GET /runs/{run_id}/results` → fetch stored results
 
-GET /runs/{run_id}/results → fetch stored results
-
-Example:
-
+```bash
 curl -X POST "http://127.0.0.1:8000/runs/<RUN_ID>/analyze"
 curl -X GET  "http://127.0.0.1:8000/runs/<RUN_ID>/results"
-🧠 Metrics (Current)
+```
+
+---
+
+## 🧠 Metrics (Current)
 
 Current analysis computes uplift by category based on promo vs baseline rows:
 
-units_base, units_promo, units_uplift, units_uplift_pct
+- `units_base`, `units_promo`, `units_uplift`, `units_uplift_pct`
+- `revenue_base`, `revenue_promo`, `revenue_uplift`, `revenue_uplift_pct`
 
-revenue_base, revenue_promo, revenue_uplift, revenue_uplift_pct
+Definitions:
+- Baseline rows: non-promo rows
+- Promo rows: `is_promo == 1` **OR** `promo_id` present
 
-Baseline rows: non-promo rows
-Promo rows: is_promo == 1 OR promo_id present
+---
 
-🗺️ Roadmap
-Next (Frontend MVP)
+## 🗺️ Roadmap
 
-React + TypeScript + Vite UI
+### Next (Frontend MVP)
+- React + TypeScript + Vite UI
+- File upload page → run detail view
+- KPI cards + category table + filters
+- Export results (CSV/JSON)
 
-File upload page → run detail view
+### Stretch
+- Promo comparison view
+- Anomaly flags / outlier detection
+- Postgres for persistent runs in production
+- GitHub Actions CI (lint + tests) + deploy frontend to GitHub Pages
 
-KPI cards + category table + filters
+---
 
-Export results (CSV/JSON)
+## 🧩 Notes on Persistence
 
-Stretch
+- Local dev uses SQLite (`cpa.db` under `backend/` by default).
+- In tests, we use an isolated temporary SQLite database created/reset for deterministic runs.
 
-Promo comparison view
+---
 
-Anomaly flags / outlier detection
+## 📄 License
+MIT License. See `LICENSE`.
 
-Postgres for persistent runs in production
+---
 
-GitHub Actions CI (lint + tests) + deploy frontend to GitHub Pages
-
-🧩 Notes on Persistence
-
-Local dev uses SQLite (cpa.db under backend/ by default).
-
-In tests, we use an isolated temporary SQLite database created per run to keep tests deterministic.
-
-📄 License
-
-MIT License. See LICENSE.
-
-👤 Author
-
-Venkata Naga
+## 👤 Author
+**Venkata Naga**  
 GitHub: https://github.com/venkatasivanaga
