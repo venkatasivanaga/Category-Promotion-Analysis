@@ -9,6 +9,11 @@ from app.db.deps import get_db
 from app.db.models import Run
 from app.schemas.run import RunOut
 from app.services.ingest import ensure_upload_dir, load_csv_from_path
+import json
+from app.db.models import RunResult
+from app.services.analyze import compute_category_uplift
+from app.services.ingest import load_csv_from_path
+from app.schemas.result import RunResultsOut
 
 router = APIRouter(prefix="/runs", tags=["runs"])
 
@@ -72,3 +77,37 @@ def upload_csv(
     db.commit()
     db.refresh(run)
     return run
+
+
+@router.post("/{run_id}/analyze", response_model=RunResultsOut)
+def analyze_run(run_id: str, db: Session = Depends(get_db)):
+    run = db.query(Run).filter(Run.id == run_id).first()
+    if not run:
+        raise HTTPException(status_code=404, detail="Run not found")
+    if not run.file_path:
+        raise HTTPException(status_code=400, detail="No uploaded CSV for this run")
+
+    df = load_csv_from_path(run.file_path)
+    summary = compute_category_uplift(df)
+
+    existing = db.query(RunResult).filter(RunResult.run_id == run_id).first()
+    payload = json.dumps(summary)
+
+    if existing:
+        existing.summary_json = payload
+        db.add(existing)
+    else:
+        db.add(RunResult(run_id=run_id, summary_json=payload))
+
+    run.status = "analyzed"
+    db.add(run)
+    db.commit()
+
+    return {"run_id": run_id, "summary": summary}
+
+@router.get("/{run_id}/results", response_model=RunResultsOut)
+def get_results(run_id: str, db: Session = Depends(get_db)):
+    rr = db.query(RunResult).filter(RunResult.run_id == run_id).first()
+    if not rr:
+        raise HTTPException(status_code=404, detail="Results not found")
+    return {"run_id": run_id, "summary": json.loads(rr.summary_json)}
