@@ -21,7 +21,7 @@ def test_upload_valid_csv_sets_run_uploaded(tmp_path, monkeypatch):
 
         files = {"file": ("sample.csv", io.BytesIO(VALID_CSV.encode("utf-8")), "text/csv")}
         r = client.post(f"/runs/{run_id}/upload", files=files)
-        assert r.status_code == 200
+        assert r.status_code == 200, r.text
         body = r.json()
         assert body["status"] == "uploaded"
         assert body["original_filename"] == "sample.csv"

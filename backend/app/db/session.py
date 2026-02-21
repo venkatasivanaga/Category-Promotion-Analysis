@@ -1,11 +1,12 @@
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
-DATABASE_URL = "sqlite:///./cpa.db"  # local dev default
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./cpa.db")
 
 engine = create_engine(
     DATABASE_URL,
-    connect_args={"check_same_thread": False},  # needed for SQLite + FastAPI
+    connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {},
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
