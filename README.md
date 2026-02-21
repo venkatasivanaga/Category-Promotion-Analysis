@@ -1,42 +1,220 @@
 # Category Promotion Analysis
 
-A full-stack promo analytics app:
-Upload a CSV → compute category/SKU promotion uplift → view dashboards → save runs → export results.
+A full-stack promo analytics app: **Upload a CSV → validate schema → compute category/SKU promotion uplift → save runs → export results**.
 
-## Planned Features (MVP)
-- Upload CSV and validate schema
-- Compute uplift metrics (baseline vs promo window) by category (and optional SKU)
-- Dashboard: KPI cards, category table, filters, trends
-- Save analysis runs (SQLite) + shareable run links
-- Export results (JSON/CSV)
+> Repo goal: clean, reproducible analytics workflow with a production-style API and test coverage.
 
-## Tech Stack
-- Frontend: React + TypeScript + Vite
-- Backend: FastAPI (Python) + Pandas
-- Storage: SQLite (upgradeable to Postgres)
+---
 
-## Dataset Requirements (initial)
-Minimum recommended columns (names can be adapted later):
-- `date` (YYYY-MM-DD or ISO datetime)
-- `category`
-- `units` (int/float)
-- `revenue` (float)
-- promo identifier (one of):
-  - `promo_id` (preferred) OR
-  - `is_promo` (0/1)
+## ✨ What it does
 
-## Data Contract (v0)
-Required:
-- `date`: date or datetime
-- `category`: string
-- `units`: number
-- `revenue`: number
+- Creates **analysis runs** (tracked in SQLite)
+- Accepts **CSV uploads** and validates required fields
+- Computes **promotion uplift metrics** (baseline vs promo rows)
+- Persists analysis **results** and exposes them via API endpoints
+- Includes **automated tests** (pytest) for the full run → upload → analyze workflow
 
-At least one promo indicator:
-- `promo_id` (string) OR `is_promo` (0/1)
+---
 
-Optional but supported later:
+## 🧱 Tech Stack
+
+**Backend**
+- FastAPI (REST API)
+- Pandas (data parsing + metrics)
+- SQLAlchemy + SQLite (run tracking + results)
+- Pytest (tests)
+- Ruff (linting)
+
+**Frontend**
+- Planned: React + TypeScript + Vite (GitHub Pages)
+- Status: Coming next
+
+---
+
+## ✅ Current Features (Backend)
+
+### Runs
+- Create a run
+- List recent runs
+- Fetch a run by ID
+
+### CSV Ingestion
+- Upload CSV for a run (`multipart/form-data`)
+- Validates schema and rejects invalid files
+
+### Analysis + Results
+- Analyze uploaded data and persist results
+- Fetch stored results later
+
+### Reliability
+- Request logging middleware
+- Environment-configurable CORS
+- Test suite validates routes and core workflows
+
+---
+
+## 📁 Repository Structure
+
+```text
+Category-Promotion-Analysis/
+  backend/
+    app/
+      api/            # API routes
+      core/           # config + logging
+      db/             # SQLAlchemy session/models
+      schemas/        # Pydantic response models
+      services/       # ingest + analyze logic
+      tests/          # pytest tests
+    pyproject.toml
+  sample_data/
+    sample_promos.csv
+  README.md
+  LICENSE
+  .gitignore
+```
+
+## 📊 CSV Data Contract (v0)
+
+### Required columns
+- `date` (date/datetime)
+- `category` (string)
+- `units` (number)
+- `revenue` (number)
+
+### Promo indicator (at least one required)
+- `promo_id` **OR**
+- `is_promo` (0/1)
+
+### Optional (supported for future enhancements)
 - `sku`
 - `discount_pct`
 
-> We’ll include a sample dataset in `/sample_data` and also add a “Load sample” button in the UI.
+A sample file is included at: `sample_data/sample_promos.csv`.
+
+---
+
+## 🚀 Quickstart (Backend)
+
+### 1) Create/activate conda env (recommended)
+
+```bash
+conda create -n promo-analytics python=3.11 -y
+conda activate promo-analytics
+```
+
+### 2) Install backend + dev tools
+
+From the repo root:
+
+```bash
+cd backend
+pip install -e ".[dev]"
+```
+
+If you prefer not to conda activate, you can run:
+conda run -n promo-analytics python -m pip install -e ".[dev]"
+
+3) Run the API
+uvicorn app.main:app --reload --port 8000
+
+Open:
+
+Health: http://127.0.0.1:8000/health
+
+API docs: http://127.0.0.1:8000/docs
+
+✅ Run Tests
+
+From the repo root:
+
+cd backend
+pytest
+
+Or with conda run:
+
+cd backend
+conda run -n promo-analytics python -m pytest
+🔌 API Reference
+
+Base URL (local): http://127.0.0.1:8000
+
+Health
+
+GET /health → { "status": "ok" }
+
+Runs
+
+POST /runs → create a run
+
+GET /runs → list recent runs
+
+GET /runs/{run_id} → get run metadata
+
+Upload CSV
+
+POST /runs/{run_id}/upload (multipart)
+
+Example (curl):
+
+curl -X POST "http://127.0.0.1:8000/runs"
+
+Upload:
+
+curl -X POST "http://127.0.0.1:8000/runs/<RUN_ID>/upload" \
+  -F "file=@sample_data/sample_promos.csv"
+Analyze + Results
+
+POST /runs/{run_id}/analyze → compute and persist results
+
+GET /runs/{run_id}/results → fetch stored results
+
+Example:
+
+curl -X POST "http://127.0.0.1:8000/runs/<RUN_ID>/analyze"
+curl -X GET  "http://127.0.0.1:8000/runs/<RUN_ID>/results"
+🧠 Metrics (Current)
+
+Current analysis computes uplift by category based on promo vs baseline rows:
+
+units_base, units_promo, units_uplift, units_uplift_pct
+
+revenue_base, revenue_promo, revenue_uplift, revenue_uplift_pct
+
+Baseline rows: non-promo rows
+Promo rows: is_promo == 1 OR promo_id present
+
+🗺️ Roadmap
+Next (Frontend MVP)
+
+React + TypeScript + Vite UI
+
+File upload page → run detail view
+
+KPI cards + category table + filters
+
+Export results (CSV/JSON)
+
+Stretch
+
+Promo comparison view
+
+Anomaly flags / outlier detection
+
+Postgres for persistent runs in production
+
+GitHub Actions CI (lint + tests) + deploy frontend to GitHub Pages
+
+🧩 Notes on Persistence
+
+Local dev uses SQLite (cpa.db under backend/ by default).
+
+In tests, we use an isolated temporary SQLite database created per run to keep tests deterministic.
+
+📄 License
+
+MIT License. See LICENSE.
+
+👤 Author
+
+Venkata Naga
+GitHub: https://github.com/venkatasivanaga
