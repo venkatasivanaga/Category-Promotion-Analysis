@@ -1,19 +1,17 @@
-from uuid import uuid4
-from pathlib import Path
+import json
 import shutil
+from pathlib import Path
+from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 
 from app.db.deps import get_db
-from app.db.models import Run
+from app.db.models import Run, RunResult
 from app.schemas.run import RunOut
-from app.services.ingest import ensure_upload_dir, load_csv_from_path
-import json
-from app.db.models import RunResult
-from app.services.analyze import compute_category_uplift
-from app.services.ingest import load_csv_from_path
 from app.schemas.result import RunResultsOut
+from app.services.analyze import compute_category_uplift
+from app.services.ingest import ensure_upload_dir, load_csv_from_path
 
 router = APIRouter(prefix="/runs", tags=["runs"])
 
