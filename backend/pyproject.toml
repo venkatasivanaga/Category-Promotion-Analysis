@@ -9,6 +9,7 @@ dependencies = [
   "pydantic>=2.6",
   "pandas>=2.0",
   "sqlalchemy>=2.0",
+  "python-multipart>=0.0.9",
 ]
 
 [project.optional-dependencies]
